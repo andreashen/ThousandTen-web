@@ -1,73 +1,57 @@
-# React + TypeScript + Vite
+# ThousandTen
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+一款基于 9x9 网格的网页积木消除小游戏。玩家在每轮从备选区获得 3 个随机积木，自由选择顺序放入棋盘，填满整行或整列即可触发消除并获得高分。
 
-Currently, two official plugins are available:
+在线体验：
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- https://andreashen.github.io/ThousandTen-web/
 
-## React Compiler
+## 游戏玩法
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- 棋盘固定为 9x9。
+- 每轮生成 3 个积木，必须全部放完才会刷新下一轮。
+- 可自由选择 3 个积木的放置顺序。
+- 当任意一整行或一整列被填满时，会立即消除。
+- 支持同时触发多行/多列消除。
+- 当备选区剩余积木都无法放入棋盘时，游戏结束。
 
-## Expanding the ESLint configuration
+## 计分规则
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- 成功放入一个积木：加分 = 该积木占用格子数 `n`。
+- 每消除 1 行或 1 列：额外 `+10` 分。
+- 同步消除按总行列数累计：
+  - 1 行 + 1 列 = `+20`
+  - 2 行 + 1 列 = `+30`
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 积木体系
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- 采用“经典平衡版”积木池，尺寸不超过 3x3：
+  - 点块（1x1）
+  - 直线块（1x2 / 1x3，含横竖）
+  - 正方形（2x2 / 3x3）
+  - L 形（2x2 与 3x3 的多方向变体）
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 交互与体验
+
+- 桌面端与移动端统一使用 Pointer 拖拽流程。
+- 放置前提供合法/非法落点高亮预览。
+- 行列消除时有高亮反馈动画。
+- 支持游戏结束弹层与一键重新开始。
+
+## 技术栈
+
+- React + TypeScript + Vite
+- Tailwind CSS
+
+## 本地运行
+
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 构建产物
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run build
 ```

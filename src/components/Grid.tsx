@@ -38,7 +38,7 @@ export function Grid({ grid, hoverPreview, clearedLines }: GridProps) {
 
   return (
     <div 
-      className="bg-gray-800 p-2 rounded-lg inline-block shadow-xl touch-none"
+      className="bg-gray-800 p-2 sm:p-4 rounded-xl shadow-xl touch-none w-full flex justify-center"
     >
       <div className="flex flex-col gap-1">
         {grid.map((row, r) => (
@@ -55,7 +55,7 @@ export function Grid({ grid, hoverPreview, clearedLines }: GridProps) {
                   data-row={r}
                   data-col={c}
                   className={cn(
-                    "w-8 h-8 rounded-sm transition-all duration-150 ease-out",
+                    "w-7 h-7 sm:w-9 sm:h-9 rounded-sm transition-all duration-150 ease-out",
                     isFilled ? "bg-blue-400 shadow-sm" : "bg-gray-700",
                     preview === 'valid' && "bg-green-400/60 shadow-[inset_0_0_8px_rgba(74,222,128,0.5)] scale-[1.02]",
                     preview === 'invalid' && "bg-red-500/60 shadow-[inset_0_0_8px_rgba(239,68,68,0.5)] scale-[1.02]",

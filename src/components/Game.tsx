@@ -172,7 +172,7 @@ export function Game() {
         </div>
 
         {/* Game Area */}
-        <div className="flex justify-center relative">
+        <div className="flex justify-center relative w-full">
           <Grid
             grid={grid}
             hoverPreview={hoverPreview}
@@ -195,9 +195,9 @@ export function Game() {
         </div>
 
         {/* Available Blocks */}
-        <div className="bg-gray-800 p-4 sm:p-6 rounded-xl shadow-lg min-h-[160px] grid grid-cols-3 gap-2 sm:gap-4 justify-items-center items-center touch-none">
+        <div className="bg-gray-800 p-3 sm:p-6 rounded-xl shadow-lg min-h-[160px] grid grid-cols-3 gap-2 sm:gap-4 justify-items-center items-center touch-none">
           {availableBlocks.map((block, i) => (
-            <div key={i} className="w-[90px] sm:w-[120px] h-[120px] sm:h-[150px] flex items-center justify-center">
+            <div key={i} className="w-[100px] sm:w-[130px] h-[130px] sm:h-[160px] flex items-center justify-center">
               {block ? (
                 <Block
                   block={block}

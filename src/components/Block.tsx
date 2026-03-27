@@ -57,7 +57,7 @@ export function Block({ block, onPointerDragStart, disabled, isDragging }: Block
               key={c}
               onPointerDown={(e) => cell === 1 ? handlePointerCellDown(e, r, c) : undefined}
               className={cn(
-                "w-7 h-7 sm:w-8 sm:h-8 rounded-sm",
+                "w-6 h-6 sm:w-7 sm:h-7 rounded-sm",
                 cell === 1 ? cn(block.colorClass, "shadow-[0_2px_4px_rgba(0,0,0,0.2)] border border-white/12") : "bg-transparent"
               )}
             />

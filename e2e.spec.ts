@@ -52,6 +52,7 @@ test.describe('ThousandTen M2 Milestone E2E Tests', () => {
     const box = await firstFilledCell.boundingBox();
     if (!box) throw new Error('Block cell not found');
     
+    // Simulate pointerdown
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
     
@@ -60,6 +61,10 @@ test.describe('ThousandTen M2 Milestone E2E Tests', () => {
     if (targetBox) {
       // Need a slight delay to allow React state to catch up with the drag start
       await page.waitForTimeout(100);
+      // Move slightly to trigger the drag visually
+      await page.mouse.move(box.x + box.width / 2 + 10, box.y + box.height / 2 + 10);
+      await page.waitForTimeout(100);
+      // Move to final target
       await page.mouse.move(targetBox.x + targetBox.width / 2, targetBox.y + targetBox.height / 2, { steps: 10 });
       await page.waitForTimeout(100);
     }

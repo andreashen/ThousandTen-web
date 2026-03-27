@@ -11,7 +11,8 @@ interface BlockProps {
     clientX: number,
     clientY: number,
     pointerOffsetX: number,
-    pointerOffsetY: number
+    pointerOffsetY: number,
+    pointerType: string
   ) => void;
   disabled?: boolean;
   isDragging?: boolean;
@@ -35,7 +36,7 @@ export function Block({ block, onPointerDragStart, disabled, isDragging }: Block
       const offsetX = e.clientX - rect.left;
       const offsetY = e.clientY - rect.top;
 
-      onPointerDragStart?.(block, r, c, e.clientX, e.clientY, offsetX, offsetY);
+      onPointerDragStart?.(block, r, c, e.clientX, e.clientY, offsetX, offsetY, e.pointerType);
     }
   };
 

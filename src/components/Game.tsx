@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Grid } from './Grid';
 import { Block } from './Block';
 import { BLOCK_SHAPES } from '../game/blocks';
@@ -10,7 +10,10 @@ import {
   checkGameOver
 } from '../game/logic';
 import type { GridState, BlockShape } from '../game/types';
-import { Trophy, RotateCcw } from 'lucide-react';
+import { cn } from '../utils/cn';
+import { AudioSystem } from '../game/audio';
+import { HapticSystem } from '../game/haptic';
+import { Trophy, RotateCcw, Volume2, VolumeX, Vibrate, VibrateOff } from 'lucide-react';
 
 export function Game() {
   const [grid, setGrid] = useState<GridState>(() => createEmptyGrid());
@@ -22,6 +25,9 @@ export function Game() {
     active: false,
   });
 
+  const [comboMessage, setComboMessage] = useState<{ count: number; active: boolean; id: number }>({ count: 0, active: false, id: 0 });
+  const comboCountRef = useRef(0);
+
   const [draggedBlock, setDraggedBlock] = useState<{
     block: BlockShape & { instanceId: string };
     offsetR: number;
@@ -30,7 +36,44 @@ export function Game() {
     clientY: number;
     pointerOffsetX: number;
     pointerOffsetY: number;
+    pointerType: string;
   } | null>(null);
+
+  const [audioEnabled, setAudioEnabled] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedAudio = localStorage.getItem('thousandten_audio');
+      if (savedAudio) return JSON.parse(savedAudio).enabled ?? true;
+    }
+    return true;
+  });
+
+  const [hapticEnabled, setHapticEnabled] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedHaptic = localStorage.getItem('thousandten_haptic');
+      if (savedHaptic) return JSON.parse(savedHaptic).enabled ?? true;
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    HapticSystem.init();
+  }, []);
+
+  const toggleAudio = () => {
+    AudioSystem.init();
+    const nextState = !audioEnabled;
+    AudioSystem.setEnabled(nextState);
+    setAudioEnabled(nextState);
+  };
+
+  const toggleHaptic = () => {
+    const nextState = !hapticEnabled;
+    HapticSystem.setEnabled(nextState);
+    setHapticEnabled(nextState);
+    if (nextState) {
+      HapticSystem.vibratePlace(); // Feedback on turning it on
+    }
+  };
 
   const [hoverPreview, setHoverPreview] = useState<{
     block: BlockShape;
@@ -47,9 +90,18 @@ export function Game() {
     setDraggedBlock(null);
     setHoverPreview(null);
     setClearedLines({ rows: [], cols: [], active: false });
+    comboCountRef.current = 0;
+    setComboMessage({ count: 0, active: false, id: 0 });
   }, []);
 
   const isGameOver = availableBlocks.length > 0 && checkGameOver(grid, availableBlocks);
+
+  useEffect(() => {
+    if (isGameOver) {
+      AudioSystem.playGameOverSound();
+      HapticSystem.vibrateGameOver();
+    }
+  }, [isGameOver]);
 
   useEffect(() => {
     if (!clearedLines.active) return;
@@ -59,6 +111,14 @@ export function Game() {
     return () => window.clearTimeout(timer);
   }, [clearedLines]);
 
+  useEffect(() => {
+    if (!comboMessage.active) return;
+    const timer = window.setTimeout(() => {
+      setComboMessage(prev => ({ ...prev, active: false }));
+    }, 1200); // Show combo message for a bit longer
+    return () => window.clearTimeout(timer);
+  }, [comboMessage]);
+
   const tryPlaceBlock = useCallback((block: BlockShape & { instanceId: string }, startRow: number, startCol: number) => {
     if (!canPlaceBlock(grid, block, startRow, startCol)) {
       return false;
@@ -66,9 +126,23 @@ export function Game() {
     const { newGrid, scoreGained, clearedRows, clearedCols } = placeBlock(grid, block, startRow, startCol);
     setGrid(newGrid);
     setScore((prev) => prev + scoreGained);
+    
     if (clearedRows.length > 0 || clearedCols.length > 0) {
       setClearedLines({ rows: clearedRows, cols: clearedCols, active: true });
+      const nextCombo = comboCountRef.current + 1;
+      comboCountRef.current = nextCombo;
+      AudioSystem.playClearSound(nextCombo);
+      HapticSystem.vibrateClear(nextCombo);
+      if (nextCombo >= 2) {
+        // Increment id to force re-render/re-animation if multiple combos happen quickly
+        setComboMessage(msg => ({ count: nextCombo, active: true, id: msg.id + 1 }));
+      }
+    } else {
+      AudioSystem.playPlaceSound();
+      HapticSystem.vibratePlace();
+      comboCountRef.current = 0;
     }
+
     setAvailableBlocks((prev) => {
       const newAvailable = prev.map((candidate) =>
         candidate?.instanceId === block.instanceId ? null : candidate
@@ -88,15 +162,32 @@ export function Game() {
     clientX: number,
     clientY: number,
     pointerOffsetX: number,
-    pointerOffsetY: number
+    pointerOffsetY: number,
+    pointerType: string
   ) => {
     if (isGameOver) return;
+    
+    // Ensure audio context is initialized on first user interaction
+    AudioSystem.init();
     
     // Prevent default touch behaviors like scrolling when dragging starts
     document.body.style.userSelect = 'none';
     document.body.style.touchAction = 'none';
+
+    // 移动端触控上移偏移量（相对单格尺寸，约 2.5 个格子的高度）
+    const isTouch = pointerType === 'touch' || pointerType === 'pen';
+    const TOUCH_Y_OFFSET = isTouch ? 80 : 0;
     
-    setDraggedBlock({ block, offsetR: offsetRow, offsetC: offsetCol, clientX, clientY, pointerOffsetX, pointerOffsetY });
+    setDraggedBlock({ 
+      block, 
+      offsetR: offsetRow, 
+      offsetC: offsetCol, 
+      clientX, 
+      clientY: clientY - TOUCH_Y_OFFSET, 
+      pointerOffsetX, 
+      pointerOffsetY,
+      pointerType
+    });
   };
 
   useEffect(() => {
@@ -106,9 +197,12 @@ export function Game() {
       // Prevent default to stop scrolling
       event.preventDefault();
       
-      setDraggedBlock(prev => prev ? { ...prev, clientX: event.clientX, clientY: event.clientY } : null);
+      const isTouch = draggedBlock.pointerType === 'touch' || draggedBlock.pointerType === 'pen';
+      const TOUCH_Y_OFFSET = isTouch ? 80 : 0;
       
-      const target = document.elementFromPoint(event.clientX, event.clientY) as HTMLElement | null;
+      setDraggedBlock(prev => prev ? { ...prev, clientX: event.clientX, clientY: event.clientY - TOUCH_Y_OFFSET } : null);
+      
+      const target = document.elementFromPoint(event.clientX, event.clientY - TOUCH_Y_OFFSET) as HTMLElement | null;
       const cell = target?.closest('[data-grid-cell="true"]') as HTMLElement | null;
       if (!cell) {
         setHoverPreview(null);
@@ -163,10 +257,26 @@ export function Game() {
             </h1>
             <p className="text-gray-400 text-sm">10x10 Block Puzzle</p>
           </div>
-          <div className="flex flex-col items-end">
-            <div className="flex items-center gap-2 text-yellow-400">
-              <Trophy size={20} />
-              <span className="text-2xl font-bold">{score}</span>
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={toggleHaptic}
+                className="text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10 active:scale-95"
+                title={hapticEnabled ? "Disable vibration" : "Enable vibration"}
+              >
+                {hapticEnabled ? <Vibrate size={24} /> : <VibrateOff size={24} />}
+              </button>
+              <button 
+                onClick={toggleAudio}
+                className="text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10 active:scale-95"
+                title={audioEnabled ? "Mute sound" : "Enable sound"}
+              >
+                {audioEnabled ? <Volume2 size={24} /> : <VolumeX size={24} />}
+              </button>
+              <div className="flex items-center gap-2 text-yellow-400">
+                <Trophy size={20} />
+                <span className="text-2xl font-bold">{score}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -178,6 +288,27 @@ export function Game() {
             hoverPreview={hoverPreview}
             clearedLines={clearedLines}
           />
+
+          {/* Combo Floating Text */}
+          {comboMessage.active && (
+            <div 
+              key={comboMessage.id}
+              className={cn(
+                "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50 animate-in fade-in zoom-in-50 slide-in-from-bottom-8 duration-500",
+                comboMessage.count >= 4 && "animate-pulse"
+              )}
+              style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))' }}
+            >
+              <div className={cn(
+                "font-black italic tracking-wider text-transparent bg-clip-text transform -rotate-6 transition-all",
+                comboMessage.count === 2 ? "text-4xl md:text-5xl bg-gradient-to-br from-blue-300 to-green-400" :
+                comboMessage.count === 3 ? "text-5xl md:text-6xl bg-gradient-to-br from-yellow-300 to-orange-500 scale-110" :
+                "text-6xl md:text-7xl bg-gradient-to-br from-orange-400 via-red-500 to-purple-600 scale-125"
+              )}>
+                {comboMessage.count >= 4 ? 'SUPER COMBO ' : 'COMBO '}x{comboMessage.count}!
+              </div>
+            </div>
+          )}
 
           {isGameOver && (
             <div className="absolute inset-0 bg-gray-900/80 rounded-lg flex flex-col items-center justify-center backdrop-blur-sm animate-in fade-in zoom-in duration-300">

@@ -1,0 +1,72 @@
+export class HapticSystem {
+  private static enabled = true;
+  private static isSupported = false;
+
+  public static init() {
+    if (typeof window === 'undefined') return;
+    this.isSupported = 'vibrate' in navigator;
+    
+    try {
+      const savedSettings = localStorage.getItem('thousandten_haptic');
+      if (savedSettings) {
+        const { enabled } = JSON.parse(savedSettings);
+        this.enabled = enabled ?? true;
+      }
+    } catch (e) {
+      console.warn('Haptic settings load failed', e);
+    }
+  }
+
+  public static setEnabled(enabled: boolean) {
+    this.enabled = enabled;
+    this.save();
+  }
+
+  public static toggle() {
+    this.setEnabled(!this.enabled);
+  }
+
+  public static get isEnabled() {
+    return this.enabled;
+  }
+
+  private static save() {
+    localStorage.setItem('thousandten_haptic', JSON.stringify({ enabled: this.enabled }));
+  }
+
+  public static vibratePlace() {
+    if (!this.enabled || !this.isSupported) return;
+    try {
+      // Light, short tap for placement
+      navigator.vibrate(10);
+    } catch {
+      // ignore
+    }
+  }
+
+  public static vibrateClear(combo: number) {
+    if (!this.enabled || !this.isSupported) return;
+    try {
+      // Different patterns based on combo
+      if (combo === 1) {
+        navigator.vibrate([20, 30, 20]);
+      } else if (combo === 2) {
+        navigator.vibrate([30, 40, 30, 40, 30]);
+      } else if (combo >= 3) {
+        navigator.vibrate([40, 30, 40, 30, 50, 40, 60]);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  public static vibrateGameOver() {
+    if (!this.enabled || !this.isSupported) return;
+    try {
+      // Long, descending pattern for game over
+      navigator.vibrate([100, 50, 200, 50, 300]);
+    } catch {
+      // ignore
+    }
+  }
+}

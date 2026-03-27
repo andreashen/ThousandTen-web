@@ -55,12 +55,26 @@ export function Block({ block, onPointerDragStart, disabled, isDragging }: Block
           {row.map((cell, c) => (
             <div
               key={c}
-              onPointerDown={(e) => cell === 1 ? handlePointerCellDown(e, r, c) : undefined}
+              // We move the onPointerDown to a wrapper that provides a larger hit area
+              // but visually keep the block cell the same size.
               className={cn(
-                "w-6 h-6 sm:w-7 sm:h-7 rounded-sm",
-                cell === 1 ? cn(block.colorClass, "shadow-[0_2px_4px_rgba(0,0,0,0.2)] border border-white/12") : "bg-transparent"
+                "relative flex items-center justify-center",
+                "w-6 h-6 sm:w-7 sm:h-7"
               )}
-            />
+            >
+              {cell === 1 && (
+                <div
+                  onPointerDown={(e) => handlePointerCellDown(e, r, c)}
+                  // The pseudo-element ::before creates a larger invisible clickable area 
+                  // around the small cell to make grabbing easier.
+                  className={cn(
+                    "w-full h-full rounded-sm absolute inset-0 z-10 before:absolute before:-inset-2 before:content-['']",
+                    block.colorClass, 
+                    "shadow-[0_2px_4px_rgba(0,0,0,0.2)] border border-white/12"
+                  )}
+                />
+              )}
+            </div>
           ))}
         </div>
       ))}

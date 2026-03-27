@@ -1,6 +1,6 @@
 import type { BlockShape, GridState } from './types';
 
-export const GRID_SIZE = 9;
+export const GRID_SIZE = 10;
 
 export function createEmptyGrid(): GridState {
   return Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
@@ -117,6 +117,8 @@ export function checkGameOver(grid: GridState, availableBlocks: (BlockShape | nu
 
 // 随机生成 3 个方块
 export function generateBlocks(allShapes: BlockShape[]): (BlockShape & { instanceId: string })[] {
+  // Option: We could implement weighted random selection here if needed later.
+  // For now, pure random across the expanded pool (including 1x4 and 1x5) works well.
   return Array.from({ length: 3 }, () => {
     const randomIndex = Math.floor(Math.random() * allShapes.length);
     // return a shallow copy with a unique instance id so React keys work better if there are duplicates

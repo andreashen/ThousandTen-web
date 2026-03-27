@@ -55,11 +55,11 @@ export function Grid({ grid, hoverPreview, clearedLines }: GridProps) {
                   data-row={r}
                   data-col={c}
                   className={cn(
-                    "w-10 h-10 rounded-sm transition-colors duration-200",
+                    "w-8 h-8 rounded-sm transition-all duration-150 ease-out",
                     isFilled ? "bg-blue-400 shadow-sm" : "bg-gray-700",
-                    preview === 'valid' && "bg-green-400/50",
-                    preview === 'invalid' && "bg-red-500/50",
-                    isCleared && "animate-pulse bg-white/80 shadow-[0_0_18px_rgba(255,255,255,0.65)]"
+                    preview === 'valid' && "bg-green-400/60 shadow-[inset_0_0_8px_rgba(74,222,128,0.5)] scale-[1.02]",
+                    preview === 'invalid' && "bg-red-500/60 shadow-[inset_0_0_8px_rgba(239,68,68,0.5)] scale-[1.02]",
+                    isCleared && "animate-pulse bg-white/80 shadow-[0_0_18px_rgba(255,255,255,0.65)] scale-90"
                   )}
                 />
               );

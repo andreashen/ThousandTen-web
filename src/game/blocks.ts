@@ -30,4 +30,12 @@ export const BLOCK_SHAPES: BlockShape[] = [
   { id: 'l-large-2', shape: [[0, 0, 1], [0, 0, 1], [1, 1, 1]], colorClass: 'bg-pink-500' },
   { id: 'l-large-3', shape: [[1, 1, 1], [1, 0, 0], [1, 0, 0]], colorClass: 'bg-pink-500' },
   { id: 'l-large-4', shape: [[1, 1, 1], [0, 0, 1], [0, 0, 1]], colorClass: 'bg-pink-500' },
+
+  // M2 New Additions: 1x4 and 4x1
+  { id: 'line-h-4', shape: [[1, 1, 1, 1]], colorClass: 'bg-teal-500' },
+  { id: 'line-v-4', shape: [[1], [1], [1], [1]], colorClass: 'bg-teal-500' },
+
+  // M2 New Additions: 1x5 and 5x1
+  { id: 'line-h-5', shape: [[1, 1, 1, 1, 1]], colorClass: 'bg-cyan-500' },
+  { id: 'line-v-5', shape: [[1], [1], [1], [1], [1]], colorClass: 'bg-cyan-500' },
 ];

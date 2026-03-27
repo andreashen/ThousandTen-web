@@ -26,6 +26,10 @@ export function Game() {
     block: BlockShape & { instanceId: string };
     offsetR: number;
     offsetC: number;
+    clientX: number;
+    clientY: number;
+    pointerOffsetX: number;
+    pointerOffsetY: number;
   } | null>(null);
 
   const [hoverPreview, setHoverPreview] = useState<{
@@ -51,7 +55,7 @@ export function Game() {
     if (!clearedLines.active) return;
     const timer = window.setTimeout(() => {
       setClearedLines({ rows: [], cols: [], active: false });
-    }, 260);
+    }, 300); // Unified with block appearance animation duration
     return () => window.clearTimeout(timer);
   }, [clearedLines]);
 
@@ -77,14 +81,33 @@ export function Game() {
     return true;
   }, [grid]);
 
-  const handlePointerDragStart = (block: BlockShape & { instanceId: string }, offsetRow: number, offsetCol: number) => {
+  const handlePointerDragStart = (
+    block: BlockShape & { instanceId: string },
+    offsetRow: number,
+    offsetCol: number,
+    clientX: number,
+    clientY: number,
+    pointerOffsetX: number,
+    pointerOffsetY: number
+  ) => {
     if (isGameOver) return;
-    setDraggedBlock({ block, offsetR: offsetRow, offsetC: offsetCol });
+    
+    // Prevent default touch behaviors like scrolling when dragging starts
+    document.body.style.userSelect = 'none';
+    document.body.style.touchAction = 'none';
+    
+    setDraggedBlock({ block, offsetR: offsetRow, offsetC: offsetCol, clientX, clientY, pointerOffsetX, pointerOffsetY });
   };
 
   useEffect(() => {
     if (!draggedBlock || isGameOver) return;
+    
     const handlePointerMove = (event: PointerEvent) => {
+      // Prevent default to stop scrolling
+      event.preventDefault();
+      
+      setDraggedBlock(prev => prev ? { ...prev, clientX: event.clientX, clientY: event.clientY } : null);
+      
       const target = document.elementFromPoint(event.clientX, event.clientY) as HTMLElement | null;
       const cell = target?.closest('[data-grid-cell="true"]') as HTMLElement | null;
       if (!cell) {
@@ -108,6 +131,10 @@ export function Game() {
     };
 
     const handlePointerUp = () => {
+      // Restore default touch behaviors
+      document.body.style.userSelect = '';
+      document.body.style.touchAction = '';
+      
       if (hoverPreview?.isValid) {
         tryPlaceBlock(draggedBlock.block, hoverPreview.startRow, hoverPreview.startCol);
       }
@@ -134,7 +161,7 @@ export function Game() {
             <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
               ThousandTen
             </h1>
-            <p className="text-gray-400 text-sm">9x9 Block Puzzle</p>
+            <p className="text-gray-400 text-sm">10x10 Block Puzzle</p>
           </div>
           <div className="flex flex-col items-end">
             <div className="flex items-center gap-2 text-yellow-400">
@@ -168,20 +195,35 @@ export function Game() {
         </div>
 
         {/* Available Blocks */}
-        <div className="bg-gray-800 p-6 rounded-xl shadow-lg min-h-[160px] grid grid-cols-3 gap-4 justify-items-center items-center touch-none">
+        <div className="bg-gray-800 p-4 sm:p-6 rounded-xl shadow-lg min-h-[160px] grid grid-cols-3 gap-2 sm:gap-4 justify-items-center items-center touch-none">
           {availableBlocks.map((block, i) => (
-            <div key={i} className="w-[120px] h-[120px] flex items-center justify-center">
+            <div key={i} className="w-[90px] sm:w-[120px] h-[120px] sm:h-[150px] flex items-center justify-center">
               {block ? (
                 <Block
                   block={block}
                   disabled={isGameOver}
                   onPointerDragStart={handlePointerDragStart}
+                  isDragging={draggedBlock?.block.instanceId === block.instanceId}
                 />
               ) : null}
             </div>
           ))}
         </div>
 
+        {/* Floating Drag Layer */}
+        {draggedBlock && (
+          <div 
+            className="fixed pointer-events-none z-[100] transition-none"
+            style={{
+              left: draggedBlock.clientX - draggedBlock.pointerOffsetX,
+              top: draggedBlock.clientY - draggedBlock.pointerOffsetY,
+              transform: `scale(1.05)`,
+              transformOrigin: `${draggedBlock.pointerOffsetX}px ${draggedBlock.pointerOffsetY}px`
+            }}
+          >
+            <Block block={draggedBlock.block} />
+          </div>
+        )}
       </div>
     </div>
   );

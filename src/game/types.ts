@@ -1,4 +1,4 @@
-export type GridState = number[][]; // 9x9, 0 means empty, 1 means filled
+export type GridState = number[][]; // 10x10, 0 means empty, 1 means filled
 
 export interface BlockShape {
   id: string;

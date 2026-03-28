@@ -250,33 +250,40 @@ export function Game() {
       <div className="w-full max-w-lg px-4 flex flex-col gap-8">
         
         {/* Header */}
-        <div className="flex justify-between items-center bg-gray-800 p-4 rounded-xl shadow-lg">
-          <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+        <div className="flex justify-between items-center bg-gray-800/80 backdrop-blur-md p-5 rounded-2xl shadow-xl border border-white/5 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 pointer-events-none" />
+          <div className="relative">
+            <h1 className="text-3xl font-black bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-sm tracking-tight">
               ThousandTen
             </h1>
-            <p className="text-gray-400 text-sm">10x10 Block Puzzle</p>
+            <p className="text-gray-400 text-xs font-medium tracking-wider uppercase mt-1">10x10 Block Puzzle</p>
           </div>
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex flex-col items-end gap-3 relative">
             <div className="flex items-center gap-4">
               <button 
                 onClick={toggleHaptic}
-                className="text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10 active:scale-95"
+                className={cn(
+                  "transition-all p-2.5 rounded-xl active:scale-95",
+                  hapticEnabled ? "text-blue-400 bg-blue-400/10 hover:bg-blue-400/20" : "text-gray-500 bg-gray-700/50 hover:bg-gray-700"
+                )}
                 title={hapticEnabled ? "Disable vibration" : "Enable vibration"}
               >
-                {hapticEnabled ? <Vibrate size={24} /> : <VibrateOff size={24} />}
+                {hapticEnabled ? <Vibrate size={22} /> : <VibrateOff size={22} />}
               </button>
               <button 
                 onClick={toggleAudio}
-                className="text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10 active:scale-95"
+                className={cn(
+                  "transition-all p-2.5 rounded-xl active:scale-95",
+                  audioEnabled ? "text-purple-400 bg-purple-400/10 hover:bg-purple-400/20" : "text-gray-500 bg-gray-700/50 hover:bg-gray-700"
+                )}
                 title={audioEnabled ? "Mute sound" : "Enable sound"}
               >
-                {audioEnabled ? <Volume2 size={24} /> : <VolumeX size={24} />}
+                {audioEnabled ? <Volume2 size={22} /> : <VolumeX size={22} />}
               </button>
-              <div className="flex items-center gap-2 text-yellow-400">
-                <Trophy size={20} />
-                <span className="text-2xl font-bold">{score}</span>
-              </div>
+            </div>
+            <div className="flex items-center gap-3 bg-gray-900/60 px-4 py-2 rounded-xl border border-white/5 shadow-inner">
+              <Trophy size={20} className="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]" />
+              <span className="text-3xl font-black text-white tracking-tight tabular-nums">{score}</span>
             </div>
           </div>
         </div>
@@ -311,16 +318,29 @@ export function Game() {
           )}
 
           {isGameOver && (
-            <div className="absolute inset-0 bg-gray-900/80 rounded-lg flex flex-col items-center justify-center backdrop-blur-sm animate-in fade-in zoom-in duration-300">
-              <h2 className="text-4xl font-bold text-red-500 mb-2">Game Over!</h2>
-              <p className="text-xl mb-6">Final Score: <span className="text-yellow-400 font-bold">{score}</span></p>
-              <button 
-                onClick={initGame}
-                className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full font-bold transition-transform hover:scale-105 active:scale-95"
-              >
-                <RotateCcw size={20} />
-                Play Again
-              </button>
+            <div className="absolute inset-0 z-[60] bg-gray-950/80 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-500 border border-white/10 shadow-2xl">
+              <div className="absolute inset-0 bg-gradient-to-t from-red-500/10 to-transparent rounded-2xl pointer-events-none" />
+              
+              <div className="relative flex flex-col items-center p-8 bg-gray-900/50 rounded-3xl border border-white/5 shadow-2xl backdrop-blur-xl w-4/5 max-w-sm">
+                <h2 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-red-400 to-red-600 mb-2 drop-shadow-md">
+                  Game Over
+                </h2>
+                <div className="h-px w-12 bg-white/10 my-4" />
+                
+                <p className="text-gray-400 font-medium mb-1 uppercase tracking-widest text-sm">Final Score</p>
+                <p className="text-5xl md:text-6xl font-black text-white mb-8 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] tabular-nums">
+                  {score}
+                </p>
+                
+                <button 
+                  onClick={initGame}
+                  className="group relative flex items-center justify-center gap-3 bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white px-8 py-4 rounded-full font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(59,130,246,0.4)] active:scale-95 w-full"
+                >
+                  <RotateCcw size={22} className="transition-transform duration-500 group-hover:-rotate-180" />
+                  <span>Play Again</span>
+                  <div className="absolute inset-0 rounded-full border border-white/20 pointer-events-none" />
+                </button>
+              </div>
             </div>
           )}
         </div>

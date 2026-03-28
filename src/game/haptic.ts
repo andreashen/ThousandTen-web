@@ -4,7 +4,11 @@ export class HapticSystem {
 
   public static init() {
     if (typeof window === 'undefined') return;
-    this.isSupported = 'vibrate' in navigator;
+    
+    // iOS Safari typically does not support the navigator.vibrate API.
+    // However, some progressive web apps (PWAs) or specific webview contexts might.
+    // We check for its existence to provide graceful degradation.
+    this.isSupported = 'vibrate' in navigator && typeof navigator.vibrate === 'function';
     
     try {
       const savedSettings = localStorage.getItem('thousandten_haptic');
@@ -12,8 +16,8 @@ export class HapticSystem {
         const { enabled } = JSON.parse(savedSettings);
         this.enabled = enabled ?? true;
       }
-    } catch (e) {
-      console.warn('Haptic settings load failed', e);
+    } catch {
+      console.warn('Haptic settings load failed');
     }
   }
 
@@ -38,7 +42,7 @@ export class HapticSystem {
     if (!this.enabled || !this.isSupported) return;
     try {
       // Light, short tap for placement
-      navigator.vibrate(10);
+      navigator.vibrate(15);
     } catch {
       // ignore
     }

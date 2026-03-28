@@ -23,9 +23,23 @@ export class AudioSystem {
         this.gainNode.connect(this.ctx.destination);
         this.updateGain();
         this.initialized = true;
+        
+        // Setup one-time global event listeners to unlock audio on first interaction
+        const unlock = () => {
+          this.unlockAudioContext();
+          document.removeEventListener('touchstart', unlock, true);
+          document.removeEventListener('touchend', unlock, true);
+          document.removeEventListener('click', unlock, true);
+          document.removeEventListener('keydown', unlock, true);
+        };
+        
+        document.addEventListener('touchstart', unlock, true);
+        document.addEventListener('touchend', unlock, true);
+        document.addEventListener('click', unlock, true);
+        document.addEventListener('keydown', unlock, true);
       }
-    } catch (e) {
-      console.warn('Audio initialization failed', e);
+    } catch {
+      console.warn('Audio initialization failed');
     }
   }
 
@@ -135,6 +149,22 @@ export class AudioSystem {
     
     osc.start(t);
     osc.stop(t + 0.5);
+  }
+
+  public static unlockAudioContext() {
+    if (!this.ctx) return;
+    
+    // Create an empty buffer and play it to unlock the context
+    // This is required by iOS Safari and other browsers to allow programmatic audio playback later
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+    
+    const buffer = this.ctx.createBuffer(1, 1, 22050);
+    const source = this.ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(this.ctx.destination);
+    source.start(0);
   }
 
   private static resumeCtx() {

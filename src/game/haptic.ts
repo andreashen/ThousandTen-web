@@ -5,8 +5,9 @@ export class HapticSystem {
   public static init() {
     if (typeof window === 'undefined') return;
     
-    // iOS Safari typically does not support the navigator.vibrate API.
-    // However, some progressive web apps (PWAs) or specific webview contexts might.
+    // Web Haptic API (navigator.vibrate) limits:
+    // - iOS Safari / Chrome for iOS / WebViews on iOS: DO NOT support navigator.vibrate. Apple has entirely disabled this API for Web.
+    // - Android Chrome / Firefox: Fully supported, but requires user interaction before firing.
     // We check for its existence to provide graceful degradation.
     this.isSupported = 'vibrate' in navigator && typeof navigator.vibrate === 'function';
     
